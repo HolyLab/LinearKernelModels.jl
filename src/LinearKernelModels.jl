@@ -91,6 +91,29 @@ function compute_r(S, k)
 end
 
 """
+"""
+function solve_for_kernel(C, d, isnz::AbstractVecOrMat{Bool}; rtol=sqrt(eps()))
+    nconstrained = length(isnz) - sum(isnz)
+    Q = zeros(size(C,1), nconstrained)
+    col = 0
+    for (i, isuc) in enumerate(isnz)
+        if !isuc
+            col += 1
+            Q[i,col] = 1
+        end
+    end
+    A = [C Q; Q' zeros(nconstrained, nconstrained)]
+    dcat = [d; zeros(nconstrained)]
+    F = svdfact(A)
+    S = F[:S]
+    Smax = maximum(S)
+    flag = S.< rtol*Smax
+    S[flag] = Inf
+    soln = F \ dcat
+    reshape(soln[1:length(d)], Compat.axes(isnz))
+end
+
+"""
     kerr = compute_kerr(k, C, S, r)
 
 Compute the estimated standard error in the parameters `k` of the
