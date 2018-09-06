@@ -72,3 +72,39 @@ end
     kcalc = reshape(C \ d, Compat.axes(ktrue))
     @test kcalc ≈ ktrue
 end
+
+@testset "Single stimulus with constraints" begin
+    S = rand(100)
+    ktrue = OffsetArray([rand(3); 0; 0], -2:2)
+    r = compute_r(S, ktrue)
+    kcalc = solve_for_kernel(S, r, ktrue.!=0)
+    @test kcalc ≈ ktrue
+end
+
+@testset "Multiple stimuli with constraints" begin
+    S = rand(100,3)
+    ktrue = OffsetArray(randn(5,3), -2:2, 1:3)
+    ktrue[rand(1:15,5,1)] = 0
+    r = compute_r(S,ktrue)
+    kcalc = solve_for_kernel(S, r, ktrue.!=0)
+    @test kcalc ≈ ktrue
+
+    # With a degeneracy that is broken by the constraint
+    S = zeros(20, 2)
+    S[10,:] = 1
+    r = zeros(20)
+    r[11:12] = 0.5
+    kmask = OffsetArray([true false; false true], -2:-1, 1:2)
+    kcalc = solve_for_kernel(S, r, kmask)
+    @test kcalc ≈ OffsetArray([0.5 0; 0 0.5], -2:-1, 1:2)
+end
+
+@testset "Multiple stimuli with constraints and Nans" begin
+    S = rand(100,7)
+    ktrue = OffsetArray(rand(5,7), -2:2, 1:7)
+    ktrue[rand(1:35, 10)] = 0
+    r = compute_r(S,ktrue)
+    r[5:10] = r[50:52] = NaN
+    kcalc = solve_for_kernel(S, r, ktrue.!=0)
+    @test kcalc ≈ ktrue
+end

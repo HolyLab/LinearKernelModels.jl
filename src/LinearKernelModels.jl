@@ -2,7 +2,7 @@ module LinearKernelModels
 
 using Compat
 
-export compute_Cd, compute_r, compute_kerr
+export solve_for_kernel, compute_Cd, compute_r, compute_kerr
 
 """
     C, d = compute_Cd(S::AbstractVecOrMat, r::AbstractVector, trange::AbstractUnitRange)
@@ -88,6 +88,31 @@ function compute_r(S, k)
         end
     end
     return r
+end
+
+"""
+"""
+function solve_for_kernel(S::AbstractVecOrMat, r::AbstractVector, isnz::AbstractVecOrMat{Bool}; rtol=sqrt(eps()))
+    trange = Compat.axes(isnz, 1)
+    C, d = compute_Cd(S, r, trange)
+    nconstrained = prod(length.(Compat.axes(isnz))) - sum(isnz)
+    Q = zeros(size(C,1), nconstrained)
+    col = 0
+    for (i, isunconstrained) in enumerate(isnz)
+        if !isunconstrained
+            col += 1
+            Q[i,col] = 1
+        end
+    end
+    A = [C Q; Q' zeros(nconstrained, nconstrained)]
+    dcat = [d; zeros(nconstrained)]
+    F = svdfact(A)
+    S = F[:S]
+    Smax = maximum(S)
+    flag = S.< rtol*Smax
+    S[flag] = Inf
+    soln = F \ dcat
+    reshape(soln[1:length(d)], Compat.axes(isnz))
 end
 
 """
