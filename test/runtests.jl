@@ -58,3 +58,17 @@ end
     kcalc = reshape(C \ d, Compat.axes(ktrue))
     @test kcalc ≈ ktrue
 end
+
+@testset "Multiple acausal stimuli and NaNs" begin
+    S = rand(100,3)
+    ktrue = OffsetArray(randn(5,3), -2:2, 1:3)
+    r = compute_r(S, ktrue)
+    C, d = compute_Cd(S, r, -2:2)
+    kcalc = reshape(C \ d, Compat.axes(ktrue))
+    @test kcalc ≈ ktrue
+
+    r[5:10] = r[50:52] = NaN
+    C, d = compute_Cd(S, r, -2:2)
+    kcalc = reshape(C \ d, Compat.axes(ktrue))
+    @test kcalc ≈ ktrue
+end
