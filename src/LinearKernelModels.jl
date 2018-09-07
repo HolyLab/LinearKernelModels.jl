@@ -91,6 +91,22 @@ function compute_r(S, k)
 end
 
 """
+  k = solve_for_kernel(S::AbstractVecOrMat, r::AbstractVector, isnz::AbstractVecOrMat{Bool})
+
+Given one or more stimuli (where `S[t, i]` is the strength of the
+`i`th stimulus at time `t`), a response vs time `r[t]`, and set of
+constraints `isnz[τ, i]`, compute the set of one or more kernels
+`k[τ, i]` such that the kernels meet the constraints `isnz` and the
+summed-convolution between `S` and `k` best predicts the response `r`.
+
+The constraints `isnz[τ, i]` define a binary matrix denoting at each 
+timepoint `τ` whether each stimulus `i`'s kernel `k` is constrained
+to be zero (0) or allowed to be any value as determined by the
+best-fit (1).  Note that `τ` is referenced relative to the current
+moment `t=0` such that the first axis of `isnz` is trange
+where trange = tpast:tfuture with tpast typically negative and tfuture
+typically positive.  If the kernel is not allowed to look into `r`'s
+future, trange = tpast:0
 """
 function solve_for_kernel(S::AbstractVecOrMat, r::AbstractVector, isnz::AbstractVecOrMat{Bool}; rtol=sqrt(eps()))
     trange = Compat.axes(isnz, 1)
