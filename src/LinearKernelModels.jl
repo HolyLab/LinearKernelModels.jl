@@ -43,7 +43,7 @@ function compute_Cd(S::AbstractVecOrMat, r::AbstractVector, trange::AbstractUnit
     for i1 = 1:nstim, i2 = i1:nstim
         for τ1 in trange, τ2 in trange
             s = 0.0
-            for t = max(1, 1-τ1, 1-τ2):min(T, T-τ1, T-τ2)
+            @inbounds @simd for t = max(1, 1-τ1, 1-τ2):min(T, T-τ1, T-τ2)
                 s += w[t] * S[t+τ1, i1] * S[t+τ2, i2]
             end
             ind1, ind2 = sub2ind(kernelaxes, τ1, i1), sub2ind(kernelaxes, τ2, i2)
@@ -54,7 +54,7 @@ function compute_Cd(S::AbstractVecOrMat, r::AbstractVector, trange::AbstractUnit
     for i = 1:nstim
         for τ in trange
             s = 0.0
-            for t = max(1, 1-τ):min(T, T-τ)
+            @inbounds @simd for t = max(1, 1-τ):min(T, T-τ)
                 p = r[t]*S[t+τ, i]
                 s += ifelse(w[t], p, zero(p))
             end
@@ -82,7 +82,7 @@ function compute_r(S, k)
     for i = 1:nstim
         for τ in trange
             kτi = k[τ,i]
-            for t = max(1, 1-τ):min(T, T-τ)
+            @inbounds @simd for t = max(1, 1-τ):min(T, T-τ)
                 r[t] += S[t+τ,i]*kτi
             end
         end
