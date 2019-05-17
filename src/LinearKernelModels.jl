@@ -92,6 +92,49 @@ function compute_r(S, k)
 end
 
 """
+    k = solve_for_kernel(S, r, isnz; rtol=sqrt(eps()))
+
+Solve for a kernel, imposing constraints on entries that are allowed to be non-zero.
+`S` is the stimulus and `r` the response vector. (See [`compute_Cd`](@ref) for more information.)
+`isnz` must have the axes of the kernel, and be true in every slot where the solved kernel
+may be non-zero. If you have no need for constraints, supply `trues(axs)` where `axs`
+encodes the axes of the kernel.
+
+# Example
+```
+julia> using LinearKernelModels, OffsetArrays
+
+julia> S = rand(100,3);
+
+julia> ktrue = OffsetArray(rand(5, 3), -4:0, 1:3)
+OffsetArray(::Array{Float64,2}, -4:0, 1:3) with eltype Float64 with indices -4:0×1:3:
+ 0.155762  0.877222  0.457633
+ 0.88788   0.355702  0.0268748
+ 0.276609  0.914133  0.230344
+ 0.718295  0.158363  0.0402396
+ 0.195513  0.783832  0.5007
+
+julia> ktrue[-4, 1] = 0
+0
+
+julia> isnz = ktrue .!= 0
+OffsetArray(::BitArray{2}, -4:0, 1:3) with eltype Bool with indices -4:0×1:3:
+ false  true  true
+  true  true  true
+  true  true  true
+  true  true  true
+  true  true  true
+
+julia> r = compute_r(S, ktrue);
+
+julia> k = solve_for_kernel(S, r, isnz)
+OffsetArray(::Array{Float64,2}, -4:0, 1:3) with eltype Float64 with indices -4:0×1:3:
+ 6.99441e-15  0.877222  0.457633
+ 0.88788      0.355702  0.0268748
+ 0.276609     0.914133  0.230344
+ 0.718295     0.158363  0.0402396
+ 0.195513     0.783832  0.5007
+```
 """
 function solve_for_kernel(S::AbstractVecOrMat, r::AbstractVector, isnz::AbstractVecOrMat{Bool}; rtol=sqrt(eps()))
     trange = axes(isnz, 1)
