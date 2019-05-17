@@ -5,6 +5,10 @@ least-square error criterion. Given a stimulus `S`, a matrix specifying the `i`t
 at time `τ` as `S[τ, i]`, and a response vector `r` such that `r[τ]` is the response at
 time `τ`, find a multilinear kernel `k[τ,i]` such that
 
+    r ≈ S ∗ k
+
+where `∗` means [convolution](https://en.wikipedia.org/wiki/Convolution).
+
 The following demo is taken from the help for `solve_for_kernel`:
 
 ```julia
